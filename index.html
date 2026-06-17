@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ваше название — Кабинет Конструктора</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  @import url('https://cdn.jsdelivr.net/npm/fontsource-inter@5.0.0/index.min.css');
+  body { font-family: 'Inter', sans-serif; background: #f1f5f9; color: #1e293b; }
+  .lot-card { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+  .lot-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px -8px rgba(0,0,0,0.12); }
+  .lot-card.hot { animation: hotPulse 2.5s infinite; }
+  .lot-card.locked { cursor: not-allowed; opacity: 0.85; }
+  .lot-card.locked:hover { transform: none; box-shadow: none; }
+  @keyframes hotPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.35); }
+    50% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+  }
+  @keyframes flyIn {
+    0% { opacity: 0; transform: translateY(-60px) scale(0.85); }
+    60% { opacity: 1; transform: translateY(8px) scale(1.02); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .fly-in { animation: flyIn 0.55s cubic-bezier(0.34, 1.3, 0.64, 1) both; }
+  .card { background: #ffffff; border: 1px solid #e2e8f0; }
+  .header-bg { background: #ffffff; border-bottom: 1px solid #e2e8f0; }
+  .filter-btn { transition: all 0.2s; }
+  .filter-btn.active { background: #059669; color: #ffffff; }
+  .filter-btn:not(.active):hover { background: #f1f5f9; }
+  .badge-hot { background: #dc2626; color: #fff; }
+  .badge-new { background: #059669; color: #fff; }
+  .badge-work { background: #0284c7; color: #fff; }
+  .badge-done { background: #64748b; color: #fff; }
+  .badge-overdue { background: #dc2626; color: #fff; }
+  .badge-paused { background: #d97706; color: #fff; }
+  .badge-review { background: #7c3aed; color: #fff; }
+  .price-tag { color: #0f172a; font-weight: 700; }
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+  .chat-panel { transition: transform 0.3s ease, opacity 0.3s ease; }
+  .chat-panel.hidden-panel { transform: translateX(100%); opacity: 0; pointer-events: none; }
+  .chat-panel.visible-panel { transform: translateX(0); opacity: 1; pointer-events: auto; }
+  .chat-bubble-me { background: #059669; color: #fff; }
+  .chat-bubble-them { background: #f1f5f9; color: #1e293b; }
+  .unread-dot { background: #dc2626; }
+  .stat-num { color: #0f172a; }
+  .stat-label { color: #64748b; }
+  .progress-bar { background: linear-gradient(90deg, #059669, #10b981); }
+  .progress-bar-overdue { background: linear-gradient(90deg, #dc2626, #ef4444); }
+  .progress-bar-paused { background: linear-gradient(90deg, #d97706, #f59e0b); }
+  .modal-overlay { background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); }
+  .btn-primary { background: #059669; color: #fff; }
+  .btn-primary:hover { background: #047857; }
+  .btn-secondary { background: #f1f5f9; color: #0f172a; border: 1px solid #e2e8f0; }
+  .btn-secondary:hover { background: #e2e8f0; }
+  .btn-warning { background: #fff; color: #d97706; border: 1px solid #fde68a; }
+  .btn-warning:hover { background: #fffbeb; }
+  .section-title { color: #0f172a; }
+  .section-sub { color: #64748b; }
+  .divider { border-color: #e2e8f0; }
+  .table-head { background: #f8fafc; color: #64748b; }
+  .table-row:hover { background: #f8fafc; }
+  .notif-badge { background: #dc2626; }
+  .overdue-card { border: 2px solid #fecaca; background: #fef2f2; }
+  .overdue-card:hover { box-shadow: 0 12px 24px -8px rgba(220, 38, 38, 0.2); }
+  .paused-card { border: 2px solid #fde68a; background: #fffbeb; }
+  .review-card { border: 2px solid #ede9fe; background: #faf5ff; }
+  .review-card:hover { box-shadow: 0 12px 24px -8px rgba(124, 58, 237, 0.15); }
+  .page-btn { transition: all 0.15s; }
+  .page-btn.active { background: #059669; color: #fff; border-color: #059669; }
+  .page-btn:not(.active):hover { background: #f1f5f9; }
+  .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .item-row { border-bottom: 1px solid #f1f5f9; }
+  .item-row:last-child { border-bottom: none; }
+  .file-link { color: #059669; }
+  .file-link:hover { text-decoration: underline; }
+  .upload-zone { border: 2px dashed #cbd5e1; transition: all 0.2s; }
+  .upload-zone:hover { border-color: #059669; background: #f0fdf4; }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- Header -->
+<header class="header-bg sticky top-0 z-40">
+  <div class="max-w-[1440px] mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <div class="w-11 h-11 rounded-lg bg-emerald-600 flex items-center justify-center text-xl font-bold text-white shadow-sm">ВЗ</div>
+      <div>
+        <h1 class="text-lg font-bold text-slate-900">Ваше название</h1>
+        <p class="text-xs text-slate-500">Кабинет конструктора</p>
+      </div>
+    </div>
+
+    <div class="hidden md:flex items-center gap-6">
+      <div class="text-center">
+        <div class="text-xl font-bold stat-num" id="stat-new">11</div>
+        <div class="text-xs stat-label">Новых</div>
+      </div>
+      <div class="w-px h-8 bg-slate-200"></div>
+      <div class="text-center">
+        <div class="text-xl font-bold stat-num" id="stat-work">8</div>
+        <div class="text-xs stat-label">В работе</div>
+      </div>
+      <div class="w-px h-8 bg-slate-200"></div>
+      <div class="text-center">
+        <div class="text-xl font-bold stat-num text-violet-600" id="stat-review">3</div>
+        <div class="text-xs stat-label">На проверке</div>
+      </div>
+      <div class="w-px h-8 bg-slate-200"></div>
+      <div class="text-center">
+        <div class="text-xl font-bold stat-num" id="stat-done">142</div>
+        <div class="text-xs stat-label">Завершено</div>
+      </div>
+      <div class="w-px h-8 bg-slate-200"></div>
+      <div class="text-center">
+        <div class="text-xl font-bold text-red-600" id="stat-overdue">3</div>
+        <div class="text-xs stat-label">Просрочено</div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button onclick="toggleChatPanel()" class="relative p-2.5 rounded-lg hover:bg-slate-100 transition">
+        <svg class="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0a3 3 0 11-6 0"/>
+        </svg>
+        <span class="absolute -top-0.5 -right-0.5 w-4 h-4 notif-badge rounded-full text-[10px] text-white flex items-center justify-center font-bold">3</span>
+      </button>
+      <div class="flex items-center gap-3 pl-3 border-l border-slate-200">
+        <div class="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center text-white font-semibold text-sm">СИ</div>
+        <div class="hidden sm:block">
+          <div class="text-sm font-semibold text-slate-900">Сидоров И.И.</div>
+          <div class="text-xs text-emerald-600 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+            Онлайн
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Filter bar -->
+<div class="max-w-[1440px] mx-auto px-6 pt-6">
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <div>
+      <h2 class="text-2xl font-bold section-title" id="view-title">Новые заказы</h2>
+      <p class="text-sm section-sub" id="view-subtitle">Назначенные, но не взятые в работу</p>
+    </div>
+    <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-lg p-1 flex-wrap">
+      <button onclick="setFilter('new')" data-filter="new" class="filter-btn active px-4 py-2 rounded-md text-sm font-semibold flex items-center gap-2">
+        Новые <span class="text-xs opacity-70" id="count-new">11</span>
+      </button>
+      <button onclick="setFilter('work')" data-filter="work" class="filter-btn px-4 py-2 rounded-md text-sm font-semibold flex items-center gap-2">
+        В работе <span class="text-xs opacity-70" id="count-work">8</span>
+      </button>
+      <button onclick="setFilter('review')" data-filter="review" class="filter-btn px-4 py-2 rounded-md text-sm font-semibold flex items-center gap-2">
+        На проверке <span class="text-xs opacity-70" id="count-review">3</span>
+      </button>
+      <button onclick="setFilter('done')" data-filter="done" class="filter-btn px-4 py-2 rounded-md text-sm font-semibold flex items-center gap-2">
+        Завершено <span class="text-xs opacity-70" id="count-done">142</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Main content -->
+<main class="max-w-[1440px] mx-auto px-6 py-6">
+  <div id="content-area" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+  <div id="pagination-area" class="hidden mt-6 flex justify-center"></div>
+</main>
+
+<!-- Chat panel -->
+<div id="chat-overlay" onclick="toggleChatPanel()" class="fixed inset-0 bg-black/30 z-40 hidden" style="backdrop-filter: blur(2px);"></div>
+<aside id="chat-panel" class="chat-panel hidden-panel fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white z-50 shadow-2xl flex flex-col">
+  <div class="px-5 py-4 border-b divider flex items-center justify-between">
+    <div>
+      <h3 class="font-bold text-slate-900">Сообщения</h3>
+      <p class="text-xs text-slate-500">Диалоги по заказам</p>
+    </div>
+    <button onclick="toggleChatPanel()" class="p-2 rounded-lg hover:bg-slate-100 transition">
+      <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="flex-1 overflow-y-auto scrollbar-thin" id="chat-list"></div>
+  <div class="border-t divider p-4 bg-slate-50">
+    <div class="flex gap-2">
+      <input type="text" id="chat-input" placeholder="Написать сообщение..." class="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+      <button onclick="sendMessage()" class="btn-primary px-4 py-2 rounded-lg text-sm font-semibold">Отправить</button>
+    </div>
+  </div>
+</aside>
+
+<!-- Lot detail modal (Новые заказы) -->
+<div id="lot-modal" class="fixed inset-0 modal-overlay z-50 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto scrollbar-thin shadow-2xl">
+    <div class="p-6" id="lot-modal-content"></div>
+  </div>
+</div>
+
+<!-- Work order modal -->
+<div id="work-modal" class="fixed inset-0 modal-overlay z-50 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto scrollbar-thin shadow-2xl">
+    <div class="p-6" id="work-modal-content"></div>
+  </div>
+</div>
+
+<!-- Complete order modal -->
+<div id="complete-modal" class="fixed inset-0 modal-overlay z-50 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-xl max-w-xl w-full shadow-2xl">
+    <div class="p-6">
+      <div class="flex justify-between items-start mb-5">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">Выполнение заказа</h2>
+          <p class="text-sm text-slate-500 mt-1">Загрузите файлы и оставьте комментарий</p>
+        </div>
+        <button onclick="closeCompleteModal()" class="p-2 rounded-lg hover:bg-slate-100 transition">
+          <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Файлы выполнения</label>
+        <div class="upload-zone rounded-lg p-6 text-center cursor-pointer" onclick="document.getElementById('file-input').click()">
+          <svg class="w-10 h-10 mx-auto text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+          <div class="text-sm text-slate-600 font-medium">Нажмите или перетащите файлы</div>
+          <div class="text-xs text-slate-400 mt-1">PDF, DWG, ZIP до 50 МБ</div>
+          <input type="file" id="file-input" class="hidden" multiple onchange="handleFileSelect(event)">
+        </div>
+        <div id="file-list" class="mt-3 space-y-2"></div>
+      </div>
+      <div class="mb-5">
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Комментарий</label>
+        <textarea id="complete-comment" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 resize-none" rows="4" placeholder="Опишите выполненную работу..."></textarea>
+      </div>
+      <div class="flex gap-2 pt-4 border-t divider">
+        <button onclick="submitComplete()" class="flex-1 btn-primary py-3 rounded-lg font-semibold">Отправить на проверку</button>
+        <button onclick="closeCompleteModal()" class="btn-secondary px-5 py-3 rounded-lg font-semibold">Отмена</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Done order modal -->
+<div id="done-modal" class="fixed inset-0 modal-overlay z-50 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto scrollbar-thin shadow-2xl">
+    <div class="p-6" id="done-modal-content"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="fixed bottom-6 right-6 z-50 hidden">
+  <div class="bg-white border border-emerald-200 rounded-lg p-4 shadow-xl flex items-center gap-3 min-w-[280px]">
+    <div class="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center text-lg text-emerald-600">✓</div>
+    <div>
+      <div class="font-semibold text-slate-900" id="toast-title">Успешно!</div>
+      <div class="text-sm text-slate-500" id="toast-text">Лот взят в работу</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const lots = [
+  { id: '212253', code: '87857', title: 'Набор мебели. Часть 2', client: 'Компания 1', price: 6975, deadline: '15.05.2026', itemsCount: 5, category: 'Кухни', urgent: true, daysLeft: 5, desc: 'Комплект кухонной мебели по индивидуальному проекту.', executor: 'Коченков В.И.', formedBy: 'Трифанова И.',
+    items: [{name: 'Шкаф верхний 600', hasFile: true}, {name: 'Шкаф нижний 600', hasFile: true}, {name: 'Тумба под мойку', hasFile: true}, {name: 'Пенал высокий', hasFile: false}, {name: 'Столешница 3м', hasFile: true}] },
+  { id: '212668', code: '87902', title: 'Комплект мебели', client: 'Компания 1', price: 15252, deadline: '22.04.2026', itemsCount: 6, category: 'Комплекты', urgent: true, daysLeft: 1, desc: 'Срочный заказ! Комплект мебели для жилого помещения.', executor: 'Сидоров И.И.', formedBy: 'Корницкая С.',
+    items: [{name: 'Шкаф 2-дверный', hasFile: true}, {name: 'Комод 4-ящичный', hasFile: true}, {name: 'Тумба прикроватная', hasFile: true}, {name: 'Зеркало настенное', hasFile: true}, {name: 'Полка декоративная', hasFile: false}, {name: 'Вешалка напольная', hasFile: true}] },
+  { id: '212924', code: '87891', title: 'Кухня на заказ', client: 'Компания 1', price: 5475, deadline: '28.04.2026', itemsCount: 1, category: 'Кухни', urgent: true, daysLeft: 3, desc: 'Индивидуальный проект кухни с нестандартными размерами.', executor: 'Коченков В.И.', formedBy: 'Трифанова И.',
+    items: [{name: 'Кухонный гарнитур', hasFile: true}] },
+  { id: '212926', code: '87890', title: 'Набор мебели', client: 'Компания 1', price: 7560, deadline: '28.04.2026', itemsCount: 2, category: 'Кухни', urgent: true, daysLeft: 3, desc: 'Набор корпусной мебели по техническому заданию.', executor: 'Коченков В.И.', formedBy: 'Трифанова И.',
+    items: [{name: 'Модуль базовый', hasFile: true}, {name: 'Модуль угловой', hasFile: true}] },
+  { id: '212996', code: '87971', title: 'В работу № 53302 Прихожая', client: 'Компания 2', price: 0, deadline: '29.04.2026', itemsCount: 1, category: 'Шкафы', urgent: false, daysLeft: 4, desc: 'Проектирование прихожей по индивидуальному заказу.', executor: 'Шульгина Н.Н.', formedBy: 'Бертаева Д.',
+    items: [{name: 'Прихожая модульная', hasFile: true}] },
+  { id: '212999', code: '87972', title: 'В работу № 53296', client: 'Компания 2', price: 0, deadline: '29.04.2026', itemsCount: 2, category: 'Шкафы', urgent: false, daysLeft: 4, desc: 'Комплект мебели для офиса.', executor: 'Шульгина Н.Н.', formedBy: 'Бертаева Д.',
+    items: [{name: 'Шкаф офисный', hasFile: true}, {name: 'Стеллаж', hasFile: true}] },
+  { id: '213017', code: '87930', title: 'Комплект мебели', client: 'Компания 3', price: 4956, deadline: '28.04.2026', itemsCount: 3, category: 'Комплекты', urgent: true, daysLeft: 3, desc: 'Комплект мебели для спальни.', executor: 'Черепанов Н.В.', formedBy: 'Баранова Г.',
+    items: [{name: 'Кровать 2-спальная', hasFile: true}, {name: 'Тумба прикроватная х2', hasFile: true}, {name: 'Шкаф распашной', hasFile: false}] },
+  { id: '213024', code: '87970', title: 'Стол 250/8913', client: 'Компания 4', price: 1250, deadline: '29.04.2026', itemsCount: 1, category: 'Шкафы', urgent: false, daysLeft: 4, desc: 'Индивидуальный проект стола.', executor: 'Зеленков А.А.', formedBy: 'Егорова М.',
+    items: [{name: 'Стол письменный', hasFile: true}] },
+  { id: '213041', code: '87982', title: 'Комплект мебели', client: 'Компания 3', price: 3522, deadline: '28.04.2026', itemsCount: 3, category: 'Комплекты', urgent: false, daysLeft: 3, desc: 'Мебельный комплект по ТЗ.', executor: 'Черепанов Н.В.', formedBy: 'Волков А.',
+    items: [{name: 'Диван прямой', hasFile: true}, {name: 'Журнальный столик', hasFile: true}, {name: 'ТВ-тумба', hasFile: true}] },
+  { id: '213064', code: '87987', title: 'Комплект мебели', client: 'Компания 3', price: 1170, deadline: '28.04.2026', itemsCount: 1, category: 'Комплекты', urgent: true, daysLeft: 3, desc: 'Небольшой комплект мебели.', executor: 'Сидоров И.И.', formedBy: 'Баранова Г.',
+    items: [{name: 'Комплект малый', hasFile: true}] },
+  { id: '213087', code: '87979', title: 'Шоурум. Часть 3. Гардероб', client: 'Компания 1', price: 4350, deadline: '01.06.2026', itemsCount: 1, category: 'Шкафы', urgent: false, daysLeft: 22, desc: 'Проектирование гардеробной для шоурума.', executor: '-', formedBy: 'Трифанова И.',
+    items: [{name: 'Гардеробная система', hasFile: true}] },
+];
+
+const myOrders = [
+  { id: '213064', code: '87987', title: 'Комплект мебели', client: 'Компания 3', price: 1170, deadline: '28.04.2026', status: 'Просрочен', progress: 65, category: 'Комплекты', overdue: true, timeSpent: 4.5, timeNorm: 3,
+    items: [{name: 'Шкаф верхний', hasFile: true}, {name: 'Шкаф нижний', hasFile: true}, {name: 'Полка декоративная', hasFile: false}] },
+  { id: '213170', code: '88003', title: 'Комплект мебели', client: 'Компания 3', price: 7590, deadline: '30.04.2026', status: 'Просрочен', progress: 40, category: 'Комплекты', overdue: true, timeSpent: 3.5, timeNorm: 3,
+    items: [{name: 'Тумба прикроватная', hasFile: true}, {name: 'Комод', hasFile: true}, {name: 'Зеркало настенное', hasFile: true}, {name: 'Полка', hasFile: false}] },
+  { id: '213204', code: '88006', title: 'Дозаказ к 83007', client: 'Компания 5', price: 122, deadline: '11.05.2026', status: 'Просрочен', progress: 10, category: 'Шкафы', overdue: true, timeSpent: 1, timeNorm: 3,
+    items: [{name: 'Дополнительная секция', hasFile: true}] },
+  { id: '213220', code: '87996', title: 'Заказ 129 (тумба + панели)', client: 'Компания 6', price: 2220, deadline: '27.05.2026', status: 'В работе', progress: 25, category: 'Шкафы', timeSpent: 1.5, timeNorm: 3,
+    items: [{name: 'Тумба основная', hasFile: true}, {name: 'Панель боковая левая', hasFile: true}, {name: 'Панель боковая правая', hasFile: true}, {name: 'Фасад', hasFile: false}] },
+  { id: '213222', code: '87961', title: '169-26 вент Шкаф', client: 'Компания 7', price: 2056, deadline: '27.05.2026', status: 'В работе', progress: 50, category: 'Шкафы', timeSpent: 2, timeNorm: 3,
+    items: [{name: 'Корпус шкафа', hasFile: true}, {name: 'Дверца вентиляционная', hasFile: true}] },
+  { id: '213240', code: '88015', title: 'Кухня модульная', client: 'Компания 1', price: 9800, deadline: '20.06.2026', status: 'В работе', progress: 15, category: 'Кухни', timeSpent: 0.5, timeNorm: 3,
+    items: [{name: 'Модуль нижний 600', hasFile: true}, {name: 'Модуль верхний 600', hasFile: true}, {name: 'Модуль угловой', hasFile: false}, {name: 'Пенал', hasFile: false}, {name: 'Столешница', hasFile: false}] },
+  { id: '213255', code: '88022', title: 'Шкаф-купе премиум', client: 'Компания 2', price: 14500, deadline: '25.06.2026', status: 'Новый', progress: 0, category: 'Шкафы', timeSpent: 0, timeNorm: 3,
+    items: [{name: 'Секция левая', hasFile: true}, {name: 'Секция центральная', hasFile: true}, {name: 'Секция правая', hasFile: true}] },
+  { id: '213260', code: '88030', title: 'Гарнитур для гостиной', client: 'Компания 4', price: 11200, deadline: '30.06.2026', status: 'Новый', progress: 0, category: 'Комплекты', timeSpent: 0, timeNorm: 3,
+    items: [{name: 'ТВ-зона', hasFile: true}, {name: 'Стеллаж', hasFile: true}, {name: 'Тумба', hasFile: false}] },
+];
+
+// Новые заказы "На проверке" — выполненные, не подтверждённые
+const ordersOnReview = [
+  { id: '213280', code: '88045', title: 'Кухня прямая 3.2м', client: 'Компания 1', price: 8900, deadline: '10.06.2026', completedDate: '08.06.2026', category: 'Кухни', timeSpent: 2.8, timeNorm: 3,
+    items: [{name: 'Модуль мойки', hasFile: true}, {name: 'Модуль плиты', hasFile: true}, {name: 'Навесные шкафы х3', hasFile: true}, {name: 'Столешница', hasFile: true}],
+    comment: 'Все модули спроектированы, файлы загружены. Жду подтверждения.' },
+  { id: '213285', code: '88052', title: 'Шкаф-купе 2.4м', client: 'Компания 3', price: 6200, deadline: '12.06.2026', completedDate: '11.06.2026', category: 'Шкафы', timeSpent: 2.5, timeNorm: 3,
+    items: [{name: 'Левая секция', hasFile: true}, {name: 'Правая секция', hasFile: true}, {name: 'Антресоль', hasFile: true}],
+    comment: 'Проект готов, чертёж загружен.' },
+  { id: '213290', code: '88060', title: 'Детская комната', client: 'Компания 5', price: 11400, deadline: '15.06.2026', completedDate: '14.06.2026', category: 'Комплекты', timeSpent: 3.2, timeNorm: 3,
+    items: [{name: 'Кровать детская', hasFile: true}, {name: 'Стол учебный', hasFile: true}, {name: 'Шкаф для одежды', hasFile: true}, {name: 'Стеллаж для книг', hasFile: true}],
+    comment: 'Комплект спроектирован с учётом всех пожеланий заказчика.' },
+];
+
+const history = [];
+const historyTitles = ['Кухня угловая', 'Шкаф-купе 3м', 'Гарнитур гостиная', 'Детская комната', 'Офисная мебель', 'Спальный гарнитур', 'Прихожая модульная', 'Кухня прямая 4м', 'Шкаф распашной', 'Стенка в зал', 'Кабинет домашний', 'Ванная комната', 'Гардеробная', 'Библиотека', 'Кухня островная', 'Шкаф-купе угловой', 'Детская двухуровневая', 'Офис ресепшн', 'Спальня классика', 'Гостиная модерн', 'Кухня минимализм', 'Шкаф встроенный', 'Прихожая современная', 'Детская подростковая', 'Кабинет руководителя', 'Ванная премиум', 'Гардероб угловая', 'Библиотека классика', 'Кухня неоклассика', 'Шкаф модульный'];
+const historyClients = ['Компания 1', 'Компания 2', 'Компания 3', 'Компания 4', 'Компания 5', 'Компания 6', 'Компания 7'];
+const historyCategories = ['Кухни', 'Шкафы', 'Комплекты'];
+
+for (let i = 0; i < 30; i++) {
+  const day = 15 - Math.floor(i / 3);
+  const month = 4 - Math.floor(i / 10);
+  const m = month <= 0 ? 3 + month : month;
+  const d = day <= 0 ? 28 + day : day;
+  const itemCount = 2 + Math.floor(Math.random() * 4);
+  const itemsArr = [];
+  for (let j = 0; j < itemCount; j++) {
+    itemsArr.push({ name: `Изделие ${j+1}`, hasFile: Math.random() > 0.3 });
+  }
+  history.push({
+    id: 212100 - i * 50,
+    title: historyTitles[i % historyTitles.length],
+    client: historyClients[i % historyClients.length],
+    price: 4000 + Math.floor(Math.random() * 12000),
+    date: `${d.toString().padStart(2,'0')}.${m.toString().padStart(2,'0')}.2026`,
+    status: 'Завершён',
+    category: historyCategories[i % historyCategories.length],
+    itemsCount: itemCount,
+    items: itemsArr,
+    comment: i % 3 === 0 ? 'Заказ выполнен в срок, замечаний нет.' : null
+  });
+}
+
+// Чаты привязаны к конкретным заказам
+const chats = [
+  { id: 1, name: 'Компания 1', orderCode: '87857', orderTitle: 'Набор мебели. Часть 2', avatar: 'К1', color: 'bg-orange-500', lastMsg: 'Добрый день! Когда сможете приступить?', time: '14:32', unread: 2, online: true },
+  { id: 2, name: 'Компания 3', orderCode: '87930', orderTitle: 'Комплект мебели', avatar: 'К3', color: 'bg-slate-700', lastMsg: 'Отправили ТЗ на почту', time: '12:15', unread: 1, online: true },
+  { id: 3, name: 'Компания 2', orderCode: '87971', orderTitle: 'Прихожая №53302', avatar: 'К2', color: 'bg-slate-500', lastMsg: 'Спасибо за оперативность!', time: 'Вчера', unread: 0, online: false },
+  { id: 4, name: 'Компания 4', orderCode: '87970', orderTitle: 'Стол 250/8913', avatar: 'К4', color: 'bg-slate-600', lastMsg: 'Оплата произведена', time: 'Вчера', unread: 0, online: false },
+];
+
+const messages = [
+  { from: 'them', text: 'Добрый день! Подскажите, пожалуйста, по срокам выполнения заказа №87857', time: '14:20' },
+  { from: 'me', text: 'Здравствуйте! Изучаю ТЗ, сегодня дам точный ответ', time: '14:25' },
+  { from: 'them', text: 'Отлично, ждём. У нас дедлайн горит', time: '14:28' },
+  { from: 'me', text: 'Понял, возьму в приоритет. Ориентировочно 5 рабочих дней', time: '14:30' },
+  { from: 'them', text: 'Добрый день! Когда сможете приступить?', time: '14:32' },
+];
+
+let currentLot = null;
+let currentWorkOrder = null;
+let currentDoneOrder = null;
+let currentFilter = 'new';
+let historyPage = 1;
+const historyPerPage = 6;
+let uploadedFiles = [];
+
+function setFilter(filter) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+
+  const title = document.getElementById('view-title');
+  const subtitle = document.getElementById('view-subtitle');
+  const area = document.getElementById('content-area');
+  const pagination = document.getElementById('pagination-area');
+
+  if (filter === 'new') {
+    title.textContent = 'Новые заказы';
+    subtitle.textContent = 'Назначенные, но не взятые в работу';
+    area.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4';
+    pagination.classList.add('hidden');
+    renderLots();
+  } else if (filter === 'work') {
+    title.textContent = 'В работе';
+    subtitle.textContent = 'Ваши активные заказы';
+    area.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
+    pagination.classList.add('hidden');
+    renderWork();
+  } else if (filter === 'review') {
+    title.textContent = 'На проверке';
+    subtitle.textContent = 'Выполненные заказы, ожидающие подтверждения';
+    area.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
+    pagination.classList.add('hidden');
+    renderReview();
+  } else if (filter === 'done') {
+    title.textContent = 'Завершено';
+    subtitle.textContent = 'История выполненных заказов';
+    area.className = 'grid grid-cols-1 gap-0';
+    pagination.classList.remove('hidden');
+    historyPage = 1;
+    renderHistory();
+    renderPagination();
+  }
+}
+
+function renderLots() {
+  const grid = document.getElementById('content-area');
+  grid.innerHTML = '';
+  lots.forEach((lot, i) => {
+    const card = document.createElement('div');
+    card.className = `lot-card card rounded-xl p-5 cursor-pointer fly-in ${lot.urgent ? 'hot' : ''}`;
+    card.style.animationDelay = `${i * 0.05}s`;
+    card.onclick = () => openLotModal(lot);
+
+    const badge = lot.urgent
+      ? `<span class="badge-hot text-[10px] px-2 py-0.5 rounded font-semibold tracking-wide">СРОЧНО</span>`
+      : `<span class="badge-new text-[10px] px-2 py-0.5 rounded font-semibold tracking-wide">НОВЫЙ</span>`;
+
+    card.innerHTML = `
+      <div class="flex items-start justify-between mb-3">
+        ${badge}
+        <span class="text-xs text-slate-400 font-mono">№${lot.code}</span>
+      </div>
+      <h3 class="font-semibold text-slate-900 mb-2 leading-snug min-h-[2.5rem]">${lot.title}</h3>
+      <div class="text-xs text-slate-500 mb-4 flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+        ${lot.client}
+      </div>
+      <div class="flex items-end justify-between mb-4">
+        <div>
+          <div class="text-[10px] uppercase tracking-wide text-slate-400 font-semibold">Стоимость</div>
+          <div class="price-tag text-lg">${lot.price > 0 ? lot.price.toLocaleString('ru') + ' ₽' : 'Договорная'}</div>
+        </div>
+        <div class="text-right">
+          <div class="text-[10px] uppercase tracking-wide text-slate-400 font-semibold">Срок</div>
+          <div class="text-sm font-semibold ${lot.daysLeft <= 3 ? 'text-red-600' : 'text-slate-700'}">${lot.daysLeft} дн.</div>
+        </div>
+      </div>
+      <div class="flex items-center justify-between pt-3 border-t divider">
+        <div class="flex items-center gap-1.5 text-xs text-slate-500">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          ${lot.itemsCount} изд.
+        </div>
+        <span class="text-xs text-slate-400">${lot.category}</span>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function renderWork() {
+  const grid = document.getElementById('content-area');
+  grid.innerHTML = '';
+
+  const sorted = [...myOrders].sort((a, b) => {
+    const order = { 'Просрочен': 0, 'В работе': 1, 'Новый': 2, 'Приостановлен': 3 };
+    return (order[a.status] ?? 4) - (order[b.status] ?? 4);
+  });
+
+  sorted.forEach((order, i) => {
+    const card = document.createElement('div');
+    let cardClass = 'lot-card card rounded-xl p-5 fly-in';
+    if (order.overdue) cardClass += ' overdue-card';
+    else if (order.status === 'Приостановлен') cardClass += ' paused-card';
+    card.className = cardClass;
+    card.style.animationDelay = `${i * 0.05}s`;
+
+    let statusBadge;
+    if (order.status === 'Просрочен') {
+      statusBadge = `<span class="badge-overdue text-[10px] px-2 py-0.5 rounded font-semibold tracking-wide">ПРОСРОЧЕН</span>`;
+    } else if (order.status === 'Новый') {
+      statusBadge = `<span class="badge-new text-[10px] px-2 py-0.5 rounded font-semibold tracking-wide">НОВЫЙ</span>`;
+    } else if (order.status === 'Приостановлен') {
+      statusBadge = `<span class="badge-paused text-[10px] px-2 py-0.5 rounded font-semibold tracking-wide">ПРИОСТАНОВЛЕН</span>`;
+    } else {
+      statusBadge = `<span class="badge-work text-[10px] px-2 py-0.5 rounded font-semibold tracking-wide">В РАБОТЕ</span>`;
+    }
+
+    const deadlineClass = order.overdue ? 'text-red-600' : 'text-slate-700';
+    const deadlineLabel = order.overdue ? 'Просрочен' : 'До';
+
+    const timePercent = Math.min((order.timeSpent / order.timeNorm) * 100, 100);
+    const timeBarClass = order.timeSpent > order.timeNorm ? 'progress-bar-overdue' : 'progress-bar';
+    const timeLabel = `${order.timeSpent}ч / ${order.timeNorm}ч`;
+
+    card.innerHTML = `
+      <div class="flex items-start justify-between mb-3">
+        ${statusBadge}
+        <span class="text-xs text-slate-400 font-mono">№${order.code}</span>
+      </div>
+      <h3 class="font-semibold text-slate-900 mb-2 leading-snug">${order.title}</h3>
+      <div class="text-xs text-slate-500 mb-4">${order.client}</div>
+      <div class="flex items-end justify-between mb-3">
+        <div>
+          <div class="text-[10px] uppercase tracking-wide text-slate-400 font-semibold">Стоимость</div>
+          <div class="price-tag text-lg">${order.price.toLocaleString('ru')} ₽</div>
+        </div>
+        <div class="text-right">
+          <div class="text-[10px] uppercase tracking-wide text-slate-400 font-semibold">${deadlineLabel}</div>
+          <div class="text-sm font-semibold ${deadlineClass}">${order.deadline}</div>
+        </div>
+      </div>
+      <div class="mb-2">
+        <div class="flex justify-between text-xs text-slate-500 mb-1.5">
+          <span class="font-medium">Затраченное время</span>
+          <span class="font-semibold ${order.timeSpent > order.timeNorm ? 'text-red-600' : 'text-slate-900'}">${timeLabel}</span>
+        </div>
+        <div class="w-full bg-slate-100 rounded-full h-1.5">
+          <div class="${timeBarClass} h-1.5 rounded-full transition-all" style="width: ${timePercent}%"></div>
+        </div>
+      </div>
+      <div class="text-xs text-slate-400 mb-4">${order.items ? order.items.length : 0} изделий в заказе</div>
+      <div class="flex gap-2 pt-3 border-t divider">
+        <button onclick="event.stopPropagation(); openWorkModal('${order.id}')" class="flex-1 btn-primary py-2 rounded-md text-xs font-semibold">Продолжить</button>
+        <button onclick="event.stopPropagation(); pauseOrder('${order.id}')" class="btn-warning px-3 py-2 rounded-md text-xs font-semibold">⏸ Приостановить</button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function pauseOrder(id) {
+  const order = myOrders.find(o => o.id === id);
+  if (!order) return;
+  if (order.status === 'Приостановлен') {
+    order.status = 'В работе';
+    showToast('Заказ возобновлён', `Заказ №${order.code} снова в работе`);
+  } else {
+    order.status = 'Приостановлен';
+    showToast('Заказ приостановлен', `Заказ №${order.code} приостановлен`);
+  }
+  renderWork();
+}
+
+function renderReview() {
+  const grid = document.getElementById('content-area');
+  grid.innerHTML = '';
+
+  ordersOnReview.forEach((order, i) => {
+    const card = document.createElement('div');
+    card.className = 'lot-card review-card rounded-xl p-5 fly-in locked';
+    card.style.animationDelay = `${i * 0.05}s`;
+
+    const timePercent = Math.min((order.timeSpent / order.timeNorm) * 100, 100);
+    const timeBarClass = order.timeSpent > order.timeNorm ? 'progress-bar-overdue' : 'progress-bar';
+    const timeLabel = `${order.timeSpent}ч / ${order.timeNorm}ч`;
+
+    card.innerHTML = `
+      <div class="flex items-start justify-between mb-3">
+        <span class="badge-review text-[10px] px-2 py-0.5 rounded font-semibold tracking-wide">НА ПРОВЕРКЕ</span>
+        <span class="text-xs text-slate-400 font-mono">№${order.code}</span>
+      </div>
+      <h3 class="font-semibold text-slate-900 mb-2 leading-snug">${order.title}</h3>
+      <div class="text-xs text-slate-500 mb-4">${order.client}</div>
+      <div class="flex items-end justify-between mb-3">
+        <div>
+          <div class="text-[10px] uppercase tracking-wide text-slate-400 font-semibold">Стоимость</div>
+          <div class="price-tag text-lg">${order.price.toLocaleString('ru')} ₽</div>
+        </div>
+        <div class="text-right">
+          <div class="text-[10px] uppercase tracking-wide text-slate-400 font-semibold">Завершён</div>
+          <div class="text-sm font-semibold text-slate-700">${order.completedDate}</div>
+        </div>
+      </div>
+      <div class="mb-2">
+        <div class="flex justify-between text-xs text-slate-500 mb-1.5">
+          <span class="font-medium">Затраченное время</span>
+          <span class="font-semibold text-slate-900">${timeLabel}</span>
+        </div>
+        <div class="w-full bg-slate-100 rounded-full h-1.5">
+          <div class="${timeBarClass} h-1.5 rounded-full transition-all" style="width: ${timePercent}%"></div>
+        </div>
+      </div>
+      <div class="text-xs text-slate-400 mb-4">${order.items ? order.items.length : 0} изделий в заказе</div>
+      <div class="flex items-center gap-2 pt-3 border-t border-violet-200">
+        <svg class="w-4 h-4 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+        <span class="text-xs text-violet-600 font-medium">Ожидает подтверждения заказчиком</span>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function openWorkModal(id) {
+  const order = myOrders.find(o => o.id === id);
+  if (!order) return;
+  currentWorkOrder = order;
+
+  const timePercent = Math.min((order.timeSpent / order.timeNorm) * 100, 100);
+  const timeBarClass = order.timeSpent > order.timeNorm ? 'progress-bar-overdue' : (order.status === 'Приостановлен' ? 'progress-bar-paused' : 'progress-bar');
+  const timeLabel = `${order.timeSpent}ч / ${order.timeNorm}ч`;
+
+  let statusBadge;
+  if (order.status === 'Просрочен') statusBadge = `<span class="badge-overdue text-xs px-2.5 py-1 rounded-md font-semibold">ПРОСРОЧЕН</span>`;
+  else if (order.status === 'Новый') statusBadge = `<span class="badge-new text-xs px-2.5 py-1 rounded-md font-semibold">НОВЫЙ</span>`;
+  else if (order.status === 'Приостановлен') statusBadge = `<span class="badge-paused text-xs px-2.5 py-1 rounded-md font-semibold">ПРИОСТАНОВЛЕН</span>`;
+  else statusBadge = `<span class="badge-work text-xs px-2.5 py-1 rounded-md font-semibold">В РАБОТЕ</span>`;
+
+  const itemsHtml = (order.items || []).map((item, idx) => `
+    <div class="item-row flex items-center justify-between py-3">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-mono text-xs">${idx + 1}</div>
+        <div>
+          <div class="text-sm font-medium text-slate-900">${item.name}</div>
+          <div class="text-xs text-slate-400">Изделие заказа</div>
+        </div>
+      </div>
+      ${item.hasFile 
+        ? `<a href="#" class="file-link text-xs font-semibold flex items-center gap-1" onclick="event.preventDefault()">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            ТЗ.pdf
+          </a>`
+        : `<span class="text-xs text-slate-400 italic">Файл не прикреплён</span>`
+      }
+    </div>
+  `).join('');
+
+  const content = document.getElementById('work-modal-content');
+  content.innerHTML = `
+    <div class="flex justify-between items-start mb-5">
+      <div>
+        <div class="flex items-center gap-2 mb-2 flex-wrap">
+          ${statusBadge}
+          <span class="text-xs text-slate-600 bg-slate-100 px-2.5 py-1 rounded-md font-medium">${order.category}</span>
+          <span class="text-xs text-slate-400">ТЗ №${order.id}</span>
+        </div>
+        <h2 class="text-xl font-bold text-slate-900">${order.title}</h2>
+        <p class="text-sm text-slate-500 mt-1">Заказ №${order.code} • ${order.client}</p>
+      </div>
+      <button onclick="closeWorkModal()" class="p-2 rounded-lg hover:bg-slate-100 transition">
+        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 mb-5">
+      <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+        <div class="text-xs text-slate-500 mb-1">Стоимость</div>
+        <div class="text-lg font-bold text-slate-900">${order.price.toLocaleString('ru')} ₽</div>
+      </div>
+      <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+        <div class="text-xs text-slate-500 mb-1">Срок выполнения</div>
+        <div class="text-lg font-bold ${order.overdue ? 'text-red-600' : 'text-slate-900'}">до ${order.deadline}</div>
+      </div>
+    </div>
+
+    <div class="mb-5">
+      <div class="flex justify-between text-sm mb-2">
+        <span class="font-semibold text-slate-700">Затраченное время</span>
+        <span class="font-bold ${order.timeSpent > order.timeNorm ? 'text-red-600' : 'text-slate-900'}">${timeLabel} (${Math.round(timePercent)}%)</span>
+      </div>
+      <div class="w-full bg-slate-100 rounded-full h-2.5">
+        <div class="${timeBarClass} h-2.5 rounded-full transition-all" style="width: ${timePercent}%"></div>
+      </div>
+      <div class="text-xs text-slate-400 mt-1">Норма: ${order.timeNorm}ч на заказ</div>
+    </div>
+
+    <div class="mb-5">
+      <h3 class="font-semibold text-slate-900 mb-3 text-sm flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        Структура изделий (${(order.items || []).length})
+      </h3>
+      <div class="bg-slate-50 rounded-lg border border-slate-100 divide-y divide-slate-100">
+        ${itemsHtml}
+      </div>
+    </div>
+
+    <div class="flex gap-2 pt-4 border-t divider">
+      <button onclick="closeWorkModal(); openCompleteModal('${order.id}')" class="flex-1 btn-primary py-3 rounded-lg font-semibold">✓ Выполнить</button>
+      <button onclick="pauseOrder('${order.id}'); closeWorkModal()" class="btn-warning px-4 py-3 rounded-lg font-semibold"> Приостановить</button>
+      <button onclick="closeWorkModal()" class="btn-secondary px-5 py-3 rounded-lg font-semibold">Закрыть</button>
+    </div>
+  `;
+
+  document.getElementById('work-modal').classList.remove('hidden');
+  document.getElementById('work-modal').classList.add('flex');
+}
+
+function closeWorkModal() {
+  document.getElementById('work-modal').classList.add('hidden');
+  document.getElementById('work-modal').classList.remove('flex');
+}
+
+function openCompleteModal(id) {
+  const order = myOrders.find(o => o.id === id);
+  if (!order) return;
+  currentWorkOrder = order;
+  uploadedFiles = [];
+  document.getElementById('complete-comment').value = '';
+  document.getElementById('file-list').innerHTML = '';
+  document.getElementById('file-input').value = '';
+  document.getElementById('complete-modal').classList.remove('hidden');
+  document.getElementById('complete-modal').classList.add('flex');
+}
+
+function closeCompleteModal() {
+  document.getElementById('complete-modal').classList.add('hidden');
+  document.getElementById('complete-modal').classList.remove('flex');
+}
+
+function handleFileSelect(event) {
+  const files = Array.from(event.target.files);
+  files.forEach(f => uploadedFiles.push(f));
+  renderFileList();
+}
+
+function renderFileList() {
+  const list = document.getElementById('file-list');
+  list.innerHTML = uploadedFiles.map((f, i) => `
+    <div class="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
+      <div class="flex items-center gap-2 min-w-0">
+        <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span class="text-sm text-slate-700 truncate">${f.name}</span>
+        <span class="text-xs text-slate-400 flex-shrink-0">${(f.size / 1024).toFixed(1)} КБ</span>
+      </div>
+      <button onclick="removeFile(${i})" class="text-slate-400 hover:text-red-600 transition flex-shrink-0 ml-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+  `).join('');
+}
+
+function removeFile(idx) {
+  uploadedFiles.splice(idx, 1);
+  renderFileList();
+}
+
+function submitComplete() {
+  if (uploadedFiles.length === 0) {
+    showToast('Внимание', 'Загрузите хотя бы один файл', 'warning');
+    return;
+  }
+  const comment = document.getElementById('complete-comment').value.trim();
+  if (!comment) {
+    showToast('Внимание', 'Добавьте комментарий к работе', 'warning');
+    return;
+  }
+  closeCompleteModal();
+  closeWorkModal();
+  showToast('Отправлено на проверку', `Заказ №${currentWorkOrder.code} отправлен`);
+}
+
+function openLotModal(lot) {
+  if (currentFilter !== 'new') return;
+  currentLot = lot;
+
+  const badge = lot.urgent ? `<span class="badge-hot text-xs px-2.5 py-1 rounded-md font-semibold">СРОЧНО</span>` : `<span class="badge-new text-xs px-2.5 py-1 rounded-md font-semibold">НОВЫЙ</span>`;
+
+  const itemsHtml = (lot.items || []).map((item, idx) => `
+    <div class="item-row flex items-center justify-between py-3">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-mono text-xs">${idx + 1}</div>
+        <div>
+          <div class="text-sm font-medium text-slate-900">${item.name}</div>
+          <div class="text-xs text-slate-400">Изделие заказа</div>
+        </div>
+      </div>
+      ${item.hasFile 
+        ? `<a href="#" class="file-link text-xs font-semibold flex items-center gap-1" onclick="event.preventDefault()">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            ТЗ.pdf
+          </a>`
+        : `<span class="text-xs text-slate-400 italic">Файл не прикреплён</span>`
+      }
+    </div>
+  `).join('');
+
+  const content = document.getElementById('lot-modal-content');
+  content.innerHTML = `
+    <div class="flex justify-between items-start mb-5">
+      <div>
+        <div class="flex items-center gap-2 mb-2 flex-wrap">
+          ${badge}
+          <span class="text-xs text-slate-600 bg-slate-100 px-2.5 py-1 rounded-md font-medium">${lot.category}</span>
+          <span class="text-xs text-slate-400">ТЗ №${lot.id}</span>
+        </div>
+        <h2 class="text-xl font-bold text-slate-900">${lot.title}</h2>
+        <p class="text-sm text-slate-500 mt-1">Заказ №${lot.code} • ${lot.client}</p>
+      </div>
+      <button onclick="closeModal()" class="p-2 rounded-lg hover:bg-slate-100 transition">
+        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 mb-5">
+      <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+        <div class="text-xs text-slate-500 mb-1">Стоимость</div>
+        <div class="text-lg font-bold text-slate-900">${lot.price > 0 ? lot.price.toLocaleString('ru') + ' ₽' : 'Договорная'}</div>
+      </div>
+      <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+        <div class="text-xs text-slate-500 mb-1">Срок выполнения</div>
+        <div class="text-lg font-bold text-red-600">${lot.daysLeft} дн. • до ${lot.deadline}</div>
+      </div>
+      <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+        <div class="text-xs text-slate-500 mb-1">Заказчик</div>
+        <div class="text-sm font-semibold text-slate-900">${lot.client}</div>
+      </div>
+      <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+        <div class="text-xs text-slate-500 mb-1">Кол-во изделий</div>
+        <div class="text-lg font-bold text-slate-900">${lot.itemsCount}</div>
+      </div>
+    </div>
+
+    <div class="mb-5">
+      <h3 class="font-semibold text-slate-900 mb-3 text-sm flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        Структура изделий (${(lot.items || []).length})
+      </h3>
+      <div class="bg-slate-50 rounded-lg border border-slate-100 divide-y divide-slate-100">
+        ${itemsHtml}
+      </div>
+    </div>
+
+    <div class="mb-5">
+      <h3 class="font-semibold text-slate-900 mb-2 text-sm">Описание</h3>
+      <p class="text-sm text-slate-600 leading-relaxed">${lot.desc}</p>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 mb-5 text-sm">
+      <div>
+        <div class="text-xs text-slate-500">Исполнитель</div>
+        <div class="font-medium text-slate-900">${lot.executor}</div>
+      </div>
+      <div>
+        <div class="text-xs text-slate-500">Сформировал</div>
+        <div class="font-medium text-slate-900">${lot.formedBy}</div>
+      </div>
+    </div>
+
+    <div class="flex gap-2 pt-4 border-t divider">
+      <button onclick="takeLot()" class="flex-1 btn-primary py-3 rounded-lg font-semibold">Взять в работу</button>
+      <button class="flex-1 btn-secondary py-3 rounded-lg font-semibold">Задать вопрос</button>
+      <button onclick="closeModal()" class="btn-secondary px-5 py-3 rounded-lg font-semibold">Отмена</button>
+    </div>
+  `;
+
+  document.getElementById('lot-modal').classList.remove('hidden');
+  document.getElementById('lot-modal').classList.add('flex');
+}
+
+function closeModal() {
+  document.getElementById('lot-modal').classList.add('hidden');
+  document.getElementById('lot-modal').classList.remove('flex');
+}
+
+function takeLot() {
+  if (!currentLot) return;
+  showToast('Лот взят в работу', `Заказ №${currentLot.code} добавлен в "В работе"`);
+  closeModal();
+}
+
+function openDoneModal(id) {
+  const order = history.find(o => o.id === id);
+  if (!order) return;
+  currentDoneOrder = order;
+
+  const itemsHtml = (order.items || []).map((item, idx) => `
+    <div class="item-row flex items-center justify-between py-3">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-mono text-xs">${idx + 1}</div>
+        <div>
+          <div class="text-sm font-medium text-slate-900">${item.name}</div>
+          <div class="text-xs text-slate-400">Изделие заказа</div>
+        </div>
+      </div>
+      ${item.hasFile 
+        ? `<a href="#" class="file-link text-xs font-semibold flex items-center gap-1" onclick="event.preventDefault()">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            ТЗ.pdf
+          </a>`
+        : `<span class="text-xs text-slate-400 italic">Файл не прикреплён</span>`
+      }
+    </div>
+  `).join('');
+
+  const content = document.getElementById('done-modal-content');
+  content.innerHTML = `
+    <div class="flex justify-between items-start mb-5">
+      <div>
+        <div class="flex items-center gap-2 mb-2 flex-wrap">
+          <span class="badge-done text-xs px-2.5 py-1 rounded-md font-semibold">ЗАВЕРШЁН</span>
+          <span class="text-xs text-slate-600 bg-slate-100 px-2.5 py-1 rounded-md font-medium">${order.category}</span>
+          <span class="text-xs text-slate-400">ТЗ №${order.id}</span>
+        </div>
+        <h2 class="text-xl font-bold text-slate-900">${order.title}</h2>
+        <p class="text-sm text-slate-500 mt-1">Заказ №${order.id} • ${order.client}</p>
+      </div>
+      <button onclick="closeDoneModal()" class="p-2 rounded-lg hover:bg-slate-100 transition">
+        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 mb-5">
+      <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+        <div class="text-xs text-slate-500 mb-1">Стоимость</div>
+        <div class="text-lg font-bold text-slate-900">${order.price.toLocaleString('ru')} ₽</div>
+      </div>
+      <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+        <div class="text-xs text-slate-500 mb-1">Дата завершения</div>
+        <div class="text-lg font-bold text-slate-900">${order.date}</div>
+      </div>
+    </div>
+
+    <div class="mb-5">
+      <h3 class="font-semibold text-slate-900 mb-3 text-sm flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        Структура изделий (${(order.items || []).length})
+      </h3>
+      <div class="bg-slate-50 rounded-lg border border-slate-100 divide-y divide-slate-100">
+        ${itemsHtml}
+      </div>
+    </div>
+
+    ${order.comment ? `
+    <div class="mb-5">
+      <h3 class="font-semibold text-slate-900 mb-2 text-sm">Комментарий исполнителя</h3>
+      <div class="bg-emerald-50 border border-emerald-100 rounded-lg p-3 text-sm text-slate-700">
+        ${order.comment}
+      </div>
+    </div>
+    ` : ''}
+
+    <div class="mb-5">
+      <h3 class="font-semibold text-slate-900 mb-2 text-sm">Ваш ответ / комментарий</h3>
+      <textarea id="done-comment" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 resize-none" rows="3" placeholder="Оставьте комментарий к заказу..."></textarea>
+    </div>
+
+    <div class="flex gap-2 pt-4 border-t divider">
+      <button onclick="submitDoneComment()" class="flex-1 btn-primary py-3 rounded-lg font-semibold">Отправить комментарий</button>
+      <button onclick="closeDoneModal()" class="btn-secondary px-5 py-3 rounded-lg font-semibold">Закрыть</button>
+    </div>
+  `;
+
+  document.getElementById('done-modal').classList.remove('hidden');
+  document.getElementById('done-modal').classList.add('flex');
+}
+
+function closeDoneModal() {
+  document.getElementById('done-modal').classList.add('hidden');
+  document.getElementById('done-modal').classList.remove('flex');
+}
+
+function submitDoneComment() {
+  const comment = document.getElementById('done-comment').value.trim();
+  if (!comment) {
+    showToast('Внимание', 'Введите комментарий', 'warning');
+    return;
+  }
+  if (currentDoneOrder) {
+    currentDoneOrder.comment = comment;
+  }
+  closeDoneModal();
+  showToast('Комментарий отправлен', 'Ваш ответ сохранён');
+}
+
+function renderHistory() {
+  const grid = document.getElementById('content-area');
+  grid.innerHTML = '';
+  const start = (historyPage - 1) * historyPerPage;
+  const pageData = history.slice(start, start + historyPerPage);
+
+  const table = document.createElement('div');
+  table.className = 'card rounded-xl overflow-hidden fly-in';
+  table.style.animationDelay = '0s';
+
+  let rows = pageData.map(h => `
+    <tr class="table-row border-b divider last:border-0 cursor-pointer" onclick="openDoneModal(${h.id})">
+      <td class="p-4 font-mono text-xs text-slate-500">#${h.id}</td>
+      <td class="p-4">
+        <div class="font-semibold text-slate-900">${h.title}</div>
+        <div class="text-xs text-slate-400 mt-0.5">${h.category} • ${h.itemsCount} изд.</div>
+      </td>
+      <td class="p-4 text-slate-600">${h.client}</td>
+      <td class="p-4 font-semibold text-slate-900">${h.price.toLocaleString('ru')} ₽</td>
+      <td class="p-4 text-slate-500 text-sm">${h.date}</td>
+      <td class="p-4"><span class="badge-done text-[10px] px-2 py-1 rounded font-semibold">ЗАВЕРШЁН</span></td>
+    </tr>
+  `).join('');
+
+  table.innerHTML = `
+    <table class="w-full text-sm">
+      <thead class="table-head">
+        <tr>
+          <th class="text-left p-4 font-semibold text-xs uppercase tracking-wide">№ ТЗ</th>
+          <th class="text-left p-4 font-semibold text-xs uppercase tracking-wide">Наименование</th>
+          <th class="text-left p-4 font-semibold text-xs uppercase tracking-wide">Заказчик</th>
+          <th class="text-left p-4 font-semibold text-xs uppercase tracking-wide">Сумма</th>
+          <th class="text-left p-4 font-semibold text-xs uppercase tracking-wide">Дата</th>
+          <th class="text-left p-4 font-semibold text-xs uppercase tracking-wide">Статус</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+  grid.appendChild(table);
+}
+
+function renderPagination() {
+  const area = document.getElementById('pagination-area');
+  const totalPages = Math.ceil(history.length / historyPerPage);
+  if (totalPages <= 1) { area.innerHTML = ''; return; }
+
+  let html = '<div class="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1">';
+  html += `<button class="page-btn px-3 py-2 rounded-md text-sm font-semibold border border-transparent" ${historyPage === 1 ? 'disabled' : ''} onclick="goToPage(${historyPage - 1})">← Назад</button>`;
+
+  for (let i = 1; i <= totalPages; i++) {
+    if (totalPages > 7) {
+      if (i === 1 || i === totalPages || (i >= historyPage - 1 && i <= historyPage + 1)) {
+        html += `<button class="page-btn w-9 h-9 rounded-md text-sm font-semibold border border-transparent ${i === historyPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+      } else if (i === historyPage - 2 || i === historyPage + 2) {
+        html += `<span class="px-2 text-slate-400">...</span>`;
+      }
+    } else {
+      html += `<button class="page-btn w-9 h-9 rounded-md text-sm font-semibold border border-transparent ${i === historyPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+    }
+  }
+
+  html += `<button class="page-btn px-3 py-2 rounded-md text-sm font-semibold border border-transparent" ${historyPage === totalPages ? 'disabled' : ''} onclick="goToPage(${historyPage + 1})">Вперёд →</button>`;
+  html += '</div>';
+  html += `<div class="text-xs text-slate-500 ml-3">Страница ${historyPage} из ${totalPages} • Показано ${Math.min(historyPage * historyPerPage, history.length)} из ${history.length}</div>`;
+
+  area.innerHTML = `<div class="flex items-center">${html}</div>`;
+}
+
+function goToPage(page) {
+  const totalPages = Math.ceil(history.length / historyPerPage);
+  if (page < 1 || page > totalPages) return;
+  historyPage = page;
+  renderHistory();
+  renderPagination();
+  window.scrollTo({ top: document.getElementById('content-area').offsetTop - 100, behavior: 'smooth' });
+}
+
+function renderChatList() {
+  const list = document.getElementById('chat-list');
+  list.innerHTML = '';
+  chats.forEach(chat => {
+    const item = document.createElement('div');
+    item.className = `p-4 border-b divider ${chat.id === currentChat ? 'bg-slate-50' : ''}`;
+    item.innerHTML = `
+      <div class="flex items-start gap-3">
+        <div class="relative flex-shrink-0">
+          <div class="w-10 h-10 rounded-full ${chat.color} flex items-center justify-center font-bold text-white text-sm">${chat.avatar}</div>
+          ${chat.online ? '<span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white"></span>' : ''}
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-2">
+            <div class="font-semibold text-sm text-slate-900 truncate">${chat.name}</div>
+            <div class="text-xs text-slate-400 flex-shrink-0">${chat.time}</div>
+          </div>
+          <div class="text-xs text-violet-600 font-medium truncate mt-0.5">
+            Заказ №${chat.orderCode} • ${chat.orderTitle}
+          </div>
+          <div class="text-xs text-slate-500 truncate mt-1">${chat.lastMsg}</div>
+        </div>
+        ${chat.unread > 0 ? `<span class="unread-dot text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold flex-shrink-0">${chat.unread}</span>` : ''}
+      </div>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function renderMessages() {
+  const container = document.getElementById('chat-messages');
+  if (!container) return;
+  container.innerHTML = '';
+  messages.forEach(msg => {
+    const bubble = document.createElement('div');
+    bubble.className = `flex ${msg.from === 'me' ? 'justify-end' : 'justify-start'}`;
+    bubble.innerHTML = `
+      <div class="${msg.from === 'me' ? 'chat-bubble-me' : 'chat-bubble-them'} rounded-lg px-3.5 py-2 max-w-[75%] shadow-sm">
+        <div class="text-sm">${msg.text}</div>
+        <div class="text-[10px] opacity-60 mt-1 text-right">${msg.time}</div>
+      </div>
+    `;
+    container.appendChild(bubble);
+  });
+  container.scrollTop = container.scrollHeight;
+}
+
+function toggleChatPanel() {
+  const panel = document.getElementById('chat-panel');
+  const overlay = document.getElementById('chat-overlay');
+  const isHidden = panel.classList.contains('hidden-panel');
+  if (isHidden) {
+    panel.classList.remove('hidden-panel');
+    panel.classList.add('visible-panel');
+    overlay.classList.remove('hidden');
+    renderChatDetail();
+  } else {
+    panel.classList.remove('visible-panel');
+    panel.classList.add('hidden-panel');
+    overlay.classList.add('hidden');
+  }
+}
+
+function renderChatDetail() {
+  const chat = chats.find(c => c.id === currentChat);
+  const panel = document.getElementById('chat-panel');
+  const header = panel.querySelector('.px-5.py-4');
+  if (!header.querySelector('#chat-detail-header')) {
+    const detail = document.createElement('div');
+    detail.id = 'chat-detail-header';
+    detail.className = 'px-5 py-3 border-b divider bg-slate-50 flex items-center gap-3';
+    detail.innerHTML = `
+      <div class="w-8 h-8 rounded-full ${chat.color} flex items-center justify-center font-bold text-white text-xs">${chat.avatar}</div>
+      <div class="flex-1 min-w-0">
+        <div class="font-semibold text-sm text-slate-900 truncate">${chat.name}</div>
+        <div class="text-xs text-violet-600 font-medium truncate">Заказ №${chat.orderCode}</div>
+        <div class="text-xs ${chat.online ? 'text-emerald-600' : 'text-slate-400'}">${chat.online ? 'Онлайн' : 'Не в сети'}</div>
+      </div>
+    `;
+    header.after(detail);
+  }
+  const msgArea = panel.querySelector('.flex-1.overflow-y-auto');
+  if (!msgArea.querySelector('#chat-messages')) {
+    const wrap = document.createElement('div');
+    wrap.id = 'chat-messages';
+    wrap.className = 'p-4 space-y-3 scrollbar-thin';
+    msgArea.appendChild(wrap);
+  }
+  renderMessages();
+}
+
+function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  const now = new Date();
+  const time = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+  messages.push({ from: 'me', text, time });
+  input.value = '';
+  renderMessages();
+  setTimeout(() => {
+    messages.push({ from: 'them', text: 'Принято, спасибо!', time });
+    renderMessages();
+  }, 1500);
+}
+
+document.getElementById('chat-input').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') sendMessage();
+});
+
+function showToast(title, text, type = 'success') {
+  document.getElementById('toast-title').textContent = title;
+  document.getElementById('toast-text').textContent = text;
+  const toast = document.getElementById('toast');
+  if (type === 'warning') {
+    toast.querySelector('div').className = 'bg-white border border-amber-200 rounded-lg p-4 shadow-xl flex items-center gap-3 min-w-[280px]';
+    toast.querySelector('.w-9').className = 'w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center text-lg text-amber-600';
+    toast.querySelector('.w-9').textContent = '!';
+  } else {
+    toast.querySelector('div').className = 'bg-white border border-emerald-200 rounded-lg p-4 shadow-xl flex items-center gap-3 min-w-[280px]';
+    toast.querySelector('.w-9').className = 'w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center text-lg text-emerald-600';
+    toast.querySelector('.w-9').textContent = '✓';
+  }
+  toast.classList.remove('hidden');
+  setTimeout(() => toast.classList.add('hidden'), 3000);
+}
+
+// Init
+renderLots();
+renderChatList();
+</script>
+</body>
+</html>
+
